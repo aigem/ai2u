@@ -127,7 +127,8 @@ start_services() {
     # 启动 frp
     log "正在启动 FRP..."
     chmod +x $WORK_DIR/apps/frpc
-    $WORK_DIR/apps/frpc > $WORK_DIR/logs/frp.log 2>&1 &
+    cd $WORK_DIR/apps
+    ./frpc > $WORK_DIR/logs/frp.log 2>&1 &
     FRP_PID=$!
     echo $FRP_PID > frp.pid
     log "FRP 服务已启动 (PID: $FRP_PID)"
