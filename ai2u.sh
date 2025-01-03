@@ -118,20 +118,17 @@ start_services() {
     log "启动服务..."
     
     # 启动 frp
-    $WORK_DIR/ai2u/frpc -c $WORK_DIR/apps/web.ini & > $WORK_DIR/logs/frp.log 2>&1
+    chmod +x $WORK_DIR/ai2u/frpc
+    $WORK_DIR/ai2u/frpc -c $WORK_DIR/apps/web.ini > $WORK_DIR/logs/frp.log 2>&1 &
     FRP_PID=$!
-    
-    # 记录 PID
     echo $FRP_PID > frp.pid
-    
     log "FRP 服务已启动 (PID: $FRP_PID)"
 
     # 启动 ksa
     chmod +x $WORK_DIR/ai2u/ksa/ksa_x64
     $WORK_DIR/ai2u/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1
-    KSA_PID=$!
-    echo $KSA_PID > ksa.pid
-    log "KSA 服务已启动 (PID: $KSA_PID),查看ID和Token请打开 $WORK_DIR/ksa_ID_Token.txt"
+    log "KSA 已运行完成，ID和Token已保存到 $WORK_DIR/ksa_ID_Token.txt"
+    log "详细使用请进群获取: https://qr61.cn/oohivs/qRp62U6"
     
     # 显示访问信息
     echo ""
