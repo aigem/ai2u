@@ -18,6 +18,10 @@ check_requirements() {
         exit 1
     fi
     
+    # 检查 pip 版本并升级
+    log "升级 pip..."
+    python -m pip install --upgrade pip --trusted-host mirrors.cloud.tencent.com -i http://mirrors.cloud.tencent.com/pypi/simple
+    
     # 检查必要命令
     for cmd in wget curl git unzip aria2; do
         if ! command -v $cmd &> /dev/null; then
@@ -40,7 +44,7 @@ setup_venv() {
     # 安装并使用 uv
     if ! command -v uv &> /dev/null; then
         log "安装 uv..."
-        pip install uv -i http://mirrors.cloud.tencent.com/pypi/simple
+        pip install uv -i http://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com
     fi
     
     uv venv -p 3.10
