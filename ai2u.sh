@@ -7,7 +7,7 @@ WORK_DIR=$(pwd)
 
 # 日志函数
 log() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a logs/preinstall.log
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a $WORK_DIR/logs/preinstall.log
 }
 
 # 检查系统要求
@@ -76,7 +76,7 @@ setup_project() {
     fi
     
     # 检查并创建日志目录
-    mkdir -p logs
+    mkdir -p $WORK_DIR/logs
     
     # 解压 frp.zip
     if [ -f frp.zip ]; then
