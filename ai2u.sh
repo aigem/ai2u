@@ -5,17 +5,6 @@ set -e
 # 设置工作目录
 WORK_DIR=$(pwd)
 
-# 检查并退出现有虚拟环境
-if [ -n "$VIRTUAL_ENV" ]; then
-    echo "检测到正在运行的虚拟环境，正在退出..."
-    if [ -f "$VIRTUAL_ENV/bin/activate" ]; then
-        source "$VIRTUAL_ENV/bin/deactivate"
-    elif [ -f "$VIRTUAL_ENV/Scripts/deactivate.bat" ]; then
-        source "$VIRTUAL_ENV/Scripts/deactivate.bat"
-    fi
-    unset VIRTUAL_ENV
-fi
-
 # 确保日志目录存在
 mkdir -p $WORK_DIR/logs
 
