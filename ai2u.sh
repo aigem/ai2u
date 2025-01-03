@@ -85,7 +85,7 @@ setup_project() {
     # 解压 frp.zip
     if [ -f frp.zip ]; then
         log "解压 frp.zip..."
-        unzip -o frp.zip
+        unzip -o frp.zip -d $WORK_DIR/apps/
     else
         log "错误: frp.zip 不存在"
         exit 1
@@ -94,7 +94,7 @@ setup_project() {
     # 解压 ksa.zip
     if [ -f ksa.zip ]; then
         log "解压 ksa.zip..."
-        unzip -o ksa.zip
+        unzip -o ksa.zip -d $WORK_DIR/apps/
     else
         log "错误: ksa.zip 不存在"
         exit 1
@@ -104,9 +104,9 @@ setup_project() {
 # 检查配置文件
 check_config() {
     log "检查配置文件..."
-    if [ ! -f $WORK_DIR/apps/web.yaml ]; then
+    if [ ! -f $WORK_DIR/apps/frpc.ini ]; then
         echo "==================================="
-        log "错误: web.yaml 不存在，请获取后重试，并放在 $WORK_DIR/apps/ 目录下"
+        log "错误: frpc.ini 不存在，请获取后重试，并放在 $WORK_DIR/apps/ 目录下"
         log "获取方式: 加群 https://qr61.cn/oohivs/qRp62U6"
         echo "==================================="
         exit 1
@@ -118,14 +118,14 @@ start_services() {
     log "启动服务..."
 
     # 启动 ksa
-    chmod +x $WORK_DIR/ai2u/ksa/ksa_x64
-    $WORK_DIR/ai2u/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1
+    chmod +x $WORK_DIR/apps/ksa/ksa_x64
+    $WORK_DIR/apps/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1
     log "KSA 已运行完成，ID和Token已保存到 $WORK_DIR/ksa_ID_Token.txt"
     log "详细使用请进群获取: https://qr61.cn/oohivs/qRp62U6"
     
     # 启动 frp
-    chmod +x $WORK_DIR/ai2u/frpc
-    $WORK_DIR/ai2u/frpc -c $WORK_DIR/apps/web.yaml > $WORK_DIR/logs/frp.log 2>&1 &
+    chmod +x $WORK_DIR/apps/frpc
+    $WORK_DIR/apps/frpc > $WORK_DIR/logs/frp.log 2>&1 &
     FRP_PID=$!
     echo $FRP_PID > frp.pid
     log "FRP 服务已启动 (PID: $FRP_PID)"
