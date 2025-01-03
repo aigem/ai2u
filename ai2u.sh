@@ -4,6 +4,7 @@
 set -e
 # 设置工作目录
 WORK_DIR=$(pwd)
+deactivate
 
 # 确保日志目录存在
 mkdir -p $WORK_DIR/logs
