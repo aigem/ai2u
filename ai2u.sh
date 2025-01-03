@@ -2,10 +2,12 @@
 
 # 设置错误时退出
 set -e
+# 设置工作目录
+WORK_DIR=$(pwd)
 
 # 日志函数
 log() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a preinstall.log
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a logs/preinstall.log
 }
 
 # 检查系统要求
@@ -66,7 +68,6 @@ setup_project() {
         log "更新已存在的项目目录..."
         cd ai2u
         git pull
-        cd ..
     else
         log "克隆项目..."
         # git clone https://github.com/aigem/ai2u.git
@@ -118,12 +119,13 @@ start_services() {
     echo "请使用以下地址打开安装界面:"
     echo "http://hb.frp.one:10086/"
     echo ""
-    echo "安装日志位置: ./logs/"
+    echo "安装日志位置: $WORK_DIR/logs/"
     echo "==================================="
     echo ""
     
     # 启动 SD
     log "启动AI应用【Stable Diffusion】安装程序"
+    cd $WORK_DIR
     marimo run apps/sd.py
 }
 
