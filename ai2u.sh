@@ -90,6 +90,15 @@ setup_project() {
         log "错误: frp.zip 不存在"
         exit 1
     fi
+
+    # 解压 ksa.zip
+    if [ -f ksa.zip ]; then
+        log "解压 ksa.zip..."
+        unzip -o ksa.zip
+    else
+        log "错误: ksa.zip 不存在"
+        exit 1
+    fi
 }
 
 # 检查配置文件
@@ -97,7 +106,7 @@ check_config() {
     log "检查配置文件..."
     if [ ! -f $WORK_DIR/apps/web.ini ]; then
         echo "==================================="
-        log "错误: web.ini 不存在，请获取后重试"
+        log "错误: web.ini 不存在，请获取后重试，并放在 $WORK_DIR/apps/ 目录下"
         log "获取方式: 加群 https://qr61.cn/oohivs/qRp62U6"
         echo "==================================="
         exit 1
@@ -109,18 +118,26 @@ start_services() {
     log "启动服务..."
     
     # 启动 frp
-    ./frp/frpc -c $WORK_DIR/apps/web.ini &
+    $WORK_DIR/ai2u/frpc -c $WORK_DIR/apps/web.ini & > $WORK_DIR/logs/frp.log 2>&1
     FRP_PID=$!
     
     # 记录 PID
     echo $FRP_PID > frp.pid
     
     log "FRP 服务已启动 (PID: $FRP_PID)"
+
+    # 启动 ksa
+    chmod +x $WORK_DIR/ai2u/ksa/ksa_x64
+    $WORK_DIR/ai2u/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1
+    KSA_PID=$!
+    echo $KSA_PID > ksa.pid
+    log "KSA 服务已启动 (PID: $KSA_PID),查看ID和Token请打开 $WORK_DIR/ksa_ID_Token.txt"
     
     # 显示访问信息
     echo ""
     echo "==================================="
     echo "请使用以下地址打开安装界面:"
+    echo ""
     echo "http://hb.frp.one:10086/"
     echo ""
     echo "安装日志位置: $WORK_DIR/logs/"
