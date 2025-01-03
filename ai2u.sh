@@ -77,8 +77,8 @@ setup_project() {
         git pull
     else
         log "克隆项目..."
-        # git clone https://github.com/aigem/ai2u.git
-        git clone https://gitee.com/fuliai/ai2u.git
+        git clone https://github.com/aigem/ai2u.git
+        # git clone https://gitee.com/fuliai/ai2u.git
         cd ai2u
     fi
     
