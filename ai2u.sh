@@ -116,6 +116,12 @@ check_config() {
 # 启动服务
 start_services() {
     log "启动服务..."
+
+    # 启动 ksa
+    chmod +x $WORK_DIR/ai2u/ksa/ksa_x64
+    $WORK_DIR/ai2u/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1
+    log "KSA 已运行完成，ID和Token已保存到 $WORK_DIR/ksa_ID_Token.txt"
+    log "详细使用请进群获取: https://qr61.cn/oohivs/qRp62U6"
     
     # 启动 frp
     chmod +x $WORK_DIR/ai2u/frpc
@@ -123,12 +129,6 @@ start_services() {
     FRP_PID=$!
     echo $FRP_PID > frp.pid
     log "FRP 服务已启动 (PID: $FRP_PID)"
-
-    # 启动 ksa
-    chmod +x $WORK_DIR/ai2u/ksa/ksa_x64
-    $WORK_DIR/ai2u/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1
-    log "KSA 已运行完成，ID和Token已保存到 $WORK_DIR/ksa_ID_Token.txt"
-    log "详细使用请进群获取: https://qr61.cn/oohivs/qRp62U6"
     
     # 显示访问信息
     echo ""
@@ -146,18 +146,6 @@ start_services() {
     cd $WORK_DIR
     marimo run apps/sd.py -p 7860 --no-token
 }
-
-# 清理函数
-cleanup() {
-    log "执行清理..."
-    if [ -f frp.pid ]; then
-        kill $(cat frp.pid) 2>/dev/null || true
-        rm frp.pid
-    fi
-}
-
-# 设置清理钩子
-trap cleanup EXIT
 
 # 主函数
 main() {
