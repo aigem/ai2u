@@ -91,7 +91,7 @@ setup_project() {
 # 检查配置文件
 check_config() {
     log "检查配置文件..."
-    if [ ! -f ./apps/web.ini ]; then
+    if [ ! -f $WORK_DIR/apps/web.ini ]; then
         echo "==================================="
         log "错误: web.ini 不存在，请获取后重试"
         log "获取方式: 加群 https://qr61.cn/oohivs/qRp62U6"
@@ -105,7 +105,7 @@ start_services() {
     log "启动服务..."
     
     # 启动 frp
-    ./frp/frpc -c ./apps/web.ini &
+    ./frp/frpc -c $WORK_DIR/apps/web.ini &
     FRP_PID=$!
     
     # 记录 PID
@@ -144,6 +144,7 @@ trap cleanup EXIT
 # 主函数
 main() {
     log "开始安装..."
+    log "工作目录: $WORK_DIR"
     
     check_requirements
     setup_venv
