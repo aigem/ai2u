@@ -23,8 +23,8 @@ check_requirements() {
     log "检查系统要求..."
     
     # 检查 Python 版本
-    if ! command -v python3 &> /dev/null; then
-        log "错误: 未安装 Python3"
+    if ! command -v python &> /dev/null; then
+        log "错误: 未安装 Python"
         exit 1
     fi
     
