@@ -104,9 +104,9 @@ setup_project() {
 # 检查配置文件
 check_config() {
     log "检查配置文件..."
-    if [ ! -f $WORK_DIR/apps/web.ini ]; then
+    if [ ! -f $WORK_DIR/apps/web.yaml ]; then
         echo "==================================="
-        log "错误: web.ini 不存在，请获取后重试，并放在 $WORK_DIR/apps/ 目录下"
+        log "错误: web.yaml 不存在，请获取后重试，并放在 $WORK_DIR/apps/ 目录下"
         log "获取方式: 加群 https://qr61.cn/oohivs/qRp62U6"
         echo "==================================="
         exit 1
@@ -125,7 +125,7 @@ start_services() {
     
     # 启动 frp
     chmod +x $WORK_DIR/ai2u/frpc
-    $WORK_DIR/ai2u/frpc -c $WORK_DIR/apps/web.ini > $WORK_DIR/logs/frp.log 2>&1 &
+    $WORK_DIR/ai2u/frpc -c $WORK_DIR/apps/web.yaml > $WORK_DIR/logs/frp.log 2>&1 &
     FRP_PID=$!
     echo $FRP_PID > frp.pid
     log "FRP 服务已启动 (PID: $FRP_PID)"
