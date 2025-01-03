@@ -5,10 +5,17 @@ set -e
 # 设置工作目录
 WORK_DIR=$(pwd)
 
+# 确保日志目录存在
+mkdir -p $WORK_DIR/logs
+
 # 日志函数
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a $WORK_DIR/logs/preinstall.log
 }
+
+# 初始化日志文件
+log "=== 开始新的安装会话 ==="
+log "初始化工作目录: $WORK_DIR"
 
 # 检查系统要求
 check_requirements() {
@@ -74,9 +81,6 @@ setup_project() {
         git clone https://gitee.com/fuliai/ai2u.git
         cd ai2u
     fi
-    
-    # 检查并创建日志目录
-    mkdir -p $WORK_DIR/logs
     
     # 解压 frp.zip
     if [ -f frp.zip ]; then
