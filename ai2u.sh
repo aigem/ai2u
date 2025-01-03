@@ -126,7 +126,7 @@ start_services() {
     # 启动 SD
     log "启动AI应用【Stable Diffusion】安装程序"
     cd $WORK_DIR
-    marimo run apps/sd.py
+    marimo run apps/sd.py -p 7860
 }
 
 # 清理函数
