@@ -91,8 +91,10 @@ setup_project() {
 check_config() {
     log "检查配置文件..."
     if [ ! -f ./apps/web.ini ]; then
+        echo "==================================="
         log "错误: web.ini 不存在，请获取后重试"
         log "获取方式: 加群 https://qr61.cn/oohivs/qRp62U6"
+        echo "==================================="
         exit 1
     fi
 }
