@@ -77,8 +77,9 @@ setup_project() {
         git pull
     else
         log "克隆项目..."
-        git clone https://github.com/aigem/ai2u.git
-        # git clone https://gitee.com/fuliai/ai2u.git
+        git config --system --unset url."https://gh-proxy.com/".insteadOf
+        # git clone https://github.com/aigem/ai2u.git
+        git clone https://gitee.com/fuliai/ai2u.git
         cd ai2u
     fi
     
