@@ -5,8 +5,22 @@
 # 1. 操作系统：Linux Ubuntu
 # 2. 权限要求：需要 root 权限
 # 3. 测试环境：IDE Cloud Studio
-# 4. 使用方法：deactivate && apt-get update && apt-get install -y curl; curl -fsSL https://gitee.com/fuliai/ai2u/raw/main/ai2u.sh <应用名称> | bash
+# 4. 使用方法：
+#    方法1：下载后直接运行：
+#    ./ai2u.sh <应用名称>
+#    方法2：使用curl方式运行：
+#    deactivate && apt-get update && apt-get install -y curl; bash -c "$(curl -fsSL https://gitee.com/fuliai/ai2u/raw/main/ai2u.sh)" - <应用名称>
 # =====================================================
+
+# 获取最后一个参数作为应用名称
+APP_NAME="${@: -1}"
+
+# 检查是否提供了应用名称
+if [ -z "$APP_NAME" ]; then
+    echo "错误：请提供应用名称"
+    echo "使用方法：./ai2u.sh <应用名称>"
+    exit 1
+fi
 
 # 设置错误时退出
 set -e
@@ -149,14 +163,16 @@ start_services() {
     # 启动 SD
     log "启动-AI应用-安装程序"
     cd $WORK_DIR
-    # 启动的文件名称，由命令行参数决定
-    marimo run apps/$1.py -p 7860 --no-token
+    # 启动的文件名称，使用APP_NAME变量
+    log "启动应用：$APP_NAME"
+    marimo run "apps/${APP_NAME}.py" -p 7860 --no-token
 }
 
 # 主函数
 main() {
     log "开始安装..."
     log "工作目录: $WORK_DIR"
+    log "应用名称: $APP_NAME"
     
     check_requirements
     setup_venv
@@ -166,4 +182,4 @@ main() {
 }
 
 # 执行主函数
-main $1
+main
