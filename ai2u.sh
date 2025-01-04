@@ -7,18 +7,29 @@
 # 3. 测试环境：IDE Cloud Studio
 # 4. 使用方法：
 #    方法1：下载后直接运行：
-#    ./ai2u.sh <应用名称>
+#    ./ai2u.sh <应用名称> [edit|run]
 #    方法2：使用curl方式运行：
-#    deactivate && apt-get update && apt-get install -y curl; bash -c "$(curl -fsSL https://gitee.com/fuliai/ai2u/raw/main/ai2u.sh)" - <应用名称>
+#    deactivate && apt-get update && apt-get install -y curl; bash -c "$(curl -fsSL https://gitee.com/fuliai/ai2u/raw/main/ai2u.sh)" - <应用名称> [edit|run]
+#    
+#    参数说明：
+#    - 应用名称：必填，须与apps目录下的安装文件名一致
+#    - 运行模式：可选，edit或run，默认为run
 # =====================================================
 
 # 获取最后一个参数作为应用名称
-APP_NAME="${@: -1}"
+APP_NAME="${@: -2:1}"
+RUN_MODE="${@: -1}"
+
+# 如果最后一个参数不是 edit 或 run，则假定它是应用名称
+if [[ "$RUN_MODE" != "edit" && "$RUN_MODE" != "run" ]]; then
+    APP_NAME="${@: -1}"
+    RUN_MODE="run"
+fi
 
 # 检查是否提供了应用名称
 if [ -z "$APP_NAME" ]; then
-    echo "错误：请提供应用名称"
-    echo "使用方法：./ai2u.sh <应用名称>"
+    echo "错误：请提供应用名称(须与apps目录下的安装文件名一致)"
+    echo "使用方法：./ai2u.sh <应用名称> [edit|run]"
     exit 1
 fi
 
@@ -164,8 +175,8 @@ start_services() {
     log "启动-AI应用-安装程序"
     cd $WORK_DIR
     # 启动的文件名称，使用APP_NAME变量
-    log "启动应用：$APP_NAME"
-    marimo run "apps/${APP_NAME}.py" -p 7860 --no-token
+    log "启动应用：$APP_NAME (模式: $RUN_MODE)"
+    marimo $RUN_MODE "apps/${APP_NAME}.py" -p 7860 --no-token
 }
 
 # 主函数
@@ -173,6 +184,7 @@ main() {
     log "开始安装..."
     log "工作目录: $WORK_DIR"
     log "应用名称: $APP_NAME"
+    log "运行模式: $RUN_MODE"
     
     check_requirements
     setup_venv
