@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# =====================================================
+# 环境要求说明：
+# 1. 操作系统：Linux Ubuntu
+# 2. 权限要求：需要 root 权限
+# 3. 测试环境：IDE Cloud Studio
+# 4. 使用方法：deactivate && apt-get update && apt-get install -y curl; curl -fsSL https://gitee.com/fuliai/ai2u/raw/main/ai2u.sh <应用名称> | bash
+# =====================================================
+
 # 设置错误时退出
 set -e
 # 设置工作目录
@@ -141,7 +149,8 @@ start_services() {
     # 启动 SD
     log "启动-AI应用-安装程序"
     cd $WORK_DIR
-    marimo run apps/sd.py -p 7860 --no-token
+    # 启动的文件名称，由命令行参数决定
+    marimo run apps/$1.py -p 7860 --no-token
 }
 
 # 主函数
@@ -157,4 +166,4 @@ main() {
 }
 
 # 执行主函数
-main
+main $1
