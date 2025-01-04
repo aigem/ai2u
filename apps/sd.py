@@ -20,6 +20,7 @@ def _(mo):
     aitool_name = mo.ui.dropdown(
         ["comfyUI", "openWebUI", "StableDifusion"], value="StableDifusion"
     )
+
     return (aitool_name,)
 
 
@@ -45,7 +46,7 @@ def _(aitool_name, datetime, logging, os):
             ],
         )
 
-        logger = logging.getLogger("{aitool_name.value}")
+        logger = logging.getLogger(f"{aitool_name.value}")
         return logger
 
 
@@ -74,7 +75,7 @@ def _(mo):
     def main_title():
         return mo.md(
             """
-            # Ai for U aitool_name.value
+            # Ai for U
             """
         ).callout()
     return (main_title,)
@@ -193,28 +194,24 @@ def _(log_error, log_info, mo, subprocess):
 
 @app.cell
 def _(mo):
-    install_switch_system = mo.ui.switch(label="启用系统依赖安装", value=False)
-    install_switch_system
-    return (install_switch_system,)
+    install_system = mo.ui.switch(label="启用系统依赖安装", value=False)
+    install_system
+    return (install_system,)
 
 
 @app.cell
-def _(install_switch_system, log_error, log_info, mo, subprocess):
+def _(install_system, log_error, log_info, mo, subprocess):
     def install_system_dependencies():
-        if not install_switch_system.value:
+        if not install_system.value:
             return mo.md("⚠️ 请先启用系统依赖安装开关").callout(kind="warn")
 
+        # Windows 系统依赖安装命令
         dependencies = [
-            "apt-get install sudo -y",
-            "echo 'Set disable_coredump false' >> /etc/sudo.conf",
-            "apt-get update",
-            "apt install build-essential -y",
-            "apt install libgl1 -y",
-            "apt-get install libtcmalloc-minimal4 -y",
-            "apt install ffmpeg -y",
-            "apt-get install bc -y",
-            "apt update",
-            "apt upgrade -y",
+            "winget install Microsoft.VisualStudio.2022.BuildTools --silent",
+            "winget install Git.Git --silent",
+            "winget install Python.Python.3.10 --silent",
+            "winget install OpenJS.NodeJS --silent",
+            "winget install FFmpeg.FFmpeg --silent"
         ]
 
         results = []
@@ -223,9 +220,9 @@ def _(install_switch_system, log_error, log_info, mo, subprocess):
         for cmd in dependencies:
             try:
                 log_info(f"执行命令: {cmd}")
+                # 在 Windows 上使用 powershell 执行命令
                 result = subprocess.run(
-                    cmd,
-                    shell=True,
+                    ["powershell", "-Command", cmd],
                     check=True,
                     text=True,
                     stdout=subprocess.PIPE,
@@ -240,7 +237,7 @@ def _(install_switch_system, log_error, log_info, mo, subprocess):
                 log_error(error_msg)
 
         # 生成安装报告
-        status = "success" if success_count == len(dependencies) else "error"
+        status = "success" if success_count == len(dependencies) else "danger"
         report = [
             f"### 系统依赖安装报告",
             f"总计: {len(dependencies)} 行命令",
@@ -273,29 +270,76 @@ def _(mo):
 
 
 @app.cell
-def _(mo):
-    install_switch_app = mo.ui.switch(label="启用程序安装", value=False)
-    install_switch_app
-    return (install_switch_app,)
+def _(log_error, log_info, mo, subprocess, uv_venv_setup):
+    def install_venv():
+        if not uv_venv_setup.value:
+            return mo.md("⚠️ 请先启用虚拟环境设置开关").callout(kind="warn")
+
+        dependencies = [
+            "python -m venv .venv",
+            ".venv\\Scripts\\activate",
+            "mkdir webui-forge",
+            "cd webui-forge",
+            "python -m venv .venv --prompt webui-forge",
+            ".venv\\Scripts\\activate"
+        ]
+
+        results = []
+        success_count = 0
+
+        for cmd in dependencies:
+            try:
+                log_info(f"执行命令: {cmd}")
+                result = subprocess.run(
+                    ["powershell", "-Command", cmd],
+                    check=True,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                success_count += 1
+                results.append(f"✅ {cmd}")
+                log_info(f"命令执行成功: {cmd}")
+            except subprocess.CalledProcessError as e:
+                error_msg = f"命令执行失败: {cmd}\n错误信息: {e.stderr}"
+                results.append(f"❌ {cmd}")
+                log_error(error_msg)
+
+        # 生成安装报告
+        status = "success" if success_count == len(dependencies) else "danger"
+        report = [
+            f"### 系统依赖安装报告",
+            f"总计: {len(dependencies)} 个依赖",
+            f"成功: {success_count} 个",
+            f"失败: {len(dependencies) - success_count} 个",
+            "",
+            "### 详细信息:",
+            *results,
+        ]
+
+        return mo.md("\n".join(report)).callout(kind=status)
+
+
+    # 安装依赖
+    install_venv()
+    return (install_venv,)
 
 
 @app.cell
-def _(install_switch_app, log_error, log_info, mo, subprocess):
-    def install_app():
-        if not install_switch_app.value:
+def _(mo):
+    install_app = mo.ui.switch(label="启用程序安装", value=False)
+    install_app
+    return (install_app,)
+
+
+@app.cell
+def _(install_app, log_error, log_info, mo, subprocess):
+    def install_step():
+        if not install_app.value:
             return mo.md("⚠️ 请先启用程序安装开关").callout(kind="warn")
 
         dependencies = [
-            "apt-get install sudo -y",
-            "echo 'Set disable_coredump false' >> /etc/sudo.conf",
-            "apt-get update",
-            "apt install build-essential -y",
-            "apt install libgl1 -y",
-            "apt-get install libtcmalloc-minimal4 -y",
-            "apt install ffmpeg -y",
-            "apt-get install bc -y",
-            "apt update",
-            "apt upgrade -y",
+            "pip install torch torchvision torchaudio -i http://mirrors.cloud.tencent.com/pypi/simple",
         ]
 
         results = []
@@ -321,7 +365,7 @@ def _(install_switch_app, log_error, log_info, mo, subprocess):
                 log_error(error_msg)
 
         # 生成安装报告
-        status = "success" if success_count == len(dependencies) else "error"
+        status = "success" if success_count == len(dependencies) else "danger"
         report = [
             f"### 系统依赖安装报告",
             f"总计: {len(dependencies)} 个依赖",
@@ -336,8 +380,8 @@ def _(install_switch_app, log_error, log_info, mo, subprocess):
 
 
     # 安装依赖
-    install_app()
-    return (install_app,)
+    install_step()
+    return (install_step,)
 
 
 @app.cell
