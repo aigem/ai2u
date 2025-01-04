@@ -102,26 +102,10 @@ setup_project() {
     fi
 }
 
-# 检查配置文件
-check_config() {
-    log "检查配置文件..."
-    if [ ! -f $WORK_DIR/apps/frpc.ini ]; then
-        echo "==================================="
-        log "方法一错误: frpc.ini 不存在，请获取后重试，并放在 $WORK_DIR/apps/ 目录下"
-        log "获取方式: 加群 https://qr61.cn/oohivs/qRp62U6"
-        echo "==================================="
-        log "方法二：使用ksa访问内网服务"
-        log "使用方式: 加群 https://qr61.cn/oohivs/qRp62U6"
-        log "或查看视频教程："
-        echo "==================================="
-    fi
-}
-
 # 启动服务
 start_services() {
     log "启动服务..."
 
-    # 启动 ksa（添加超时控制）
     log "正在启动 KSA..."
     chmod +x $WORK_DIR/apps/ksa/ksa_x64
     $WORK_DIR/apps/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1 &
@@ -129,27 +113,33 @@ start_services() {
     log "详细使用请进群获取: https://qr61.cn/oohivs/qRp62U6"
     
     # 启动 frp
-    log "正在启动 FRP..."
-    chmod +x $WORK_DIR/apps/frpc
-    cd $WORK_DIR/apps
-    ./frpc > $WORK_DIR/logs/frp.log 2>&1 &
-    FRP_PID=$!
-    echo $FRP_PID > frp.pid
-    log "FRP 服务已启动 (PID: $FRP_PID)"
-    
-    # 显示访问信息
-    echo ""
-    echo "==================================="
-    echo "请使用以下地址打开安装界面:"
-    echo ""
-    echo "http://hb.frp.one:10086/"
-    echo ""
-    echo "安装日志位置: $WORK_DIR/logs/"
-    echo "==================================="
-    echo ""
+    log "检查配置文件,存在才启动frp"
+    if [ -f $WORK_DIR/apps/frpc.ini ]; then
+        log "配置文件存在，正在启动 FRP..."
+        chmod +x $WORK_DIR/apps/frpc
+        cd $WORK_DIR/apps
+        ./frpc > $WORK_DIR/logs/frp.log 2>&1 &
+        FRP_PID=$!
+        echo $FRP_PID > frp.pid
+        log "FRP 服务已启动 (PID: $FRP_PID)"
+        # 显示访问信息
+        echo ""
+        echo "==================================="
+        echo "请使用以下地址打开安装界面:"
+        echo ""
+        echo "http://hb.frp.one:10086/"
+        echo ""
+        echo "安装日志位置: $WORK_DIR/logs/"
+        echo "==================================="
+        echo ""
+    else
+        log "错误: frpc.ini 不存在，请获取后重试，并放在 $WORK_DIR/apps/ 目录下"
+        log "获取方式: 加群 https://qr61.cn/oohivs/qRp62U6"
+        log "跳过启动frp"
+    fi
     
     # 启动 SD
-    log "启动AI应用【Stable Diffusion】安装程序"
+    log "启动-AI应用-安装程序"
     cd $WORK_DIR
     marimo run apps/sd.py -p 7860 --no-token
 }
@@ -163,7 +153,6 @@ main() {
     setup_venv
     install_dependencies
     setup_project
-    check_config
     start_services
 }
 
