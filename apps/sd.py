@@ -46,7 +46,7 @@ def _(aitool_name, datetime, logging, os):
             ],
         )
 
-        logger = logging.getLogger(f"{aitool_name.value}")
+        logger = logging.getLogger("{aitool_name.value}")
         return logger
 
 
@@ -205,13 +205,17 @@ def _(install_system, log_error, log_info, mo, subprocess):
         if not install_system.value:
             return mo.md("⚠️ 请先启用系统依赖安装开关").callout(kind="warn")
 
-        # Windows 系统依赖安装命令
         dependencies = [
-            "winget install Microsoft.VisualStudio.2022.BuildTools --silent",
-            "winget install Git.Git --silent",
-            "winget install Python.Python.3.10 --silent",
-            "winget install OpenJS.NodeJS --silent",
-            "winget install FFmpeg.FFmpeg --silent"
+            "apt-get install sudo -y",
+            "echo 'Set disable_coredump false' >> /etc/sudo.conf",
+            "apt-get update",
+            "apt install build-essential -y",
+            "apt install libgl1 -y",
+            "apt-get install libtcmalloc-minimal4 -y",
+            "apt install ffmpeg -y",
+            "apt-get install bc -y",
+            "apt update",
+            "apt upgrade -y",
         ]
 
         results = []
@@ -220,9 +224,9 @@ def _(install_system, log_error, log_info, mo, subprocess):
         for cmd in dependencies:
             try:
                 log_info(f"执行命令: {cmd}")
-                # 在 Windows 上使用 powershell 执行命令
                 result = subprocess.run(
-                    ["powershell", "-Command", cmd],
+                    cmd,
+                    shell=True,
                     check=True,
                     text=True,
                     stdout=subprocess.PIPE,
@@ -276,12 +280,11 @@ def _(log_error, log_info, mo, subprocess, uv_venv_setup):
             return mo.md("⚠️ 请先启用虚拟环境设置开关").callout(kind="warn")
 
         dependencies = [
-            "python -m venv .venv",
-            ".venv\\Scripts\\activate",
-            "mkdir webui-forge",
-            "cd webui-forge",
-            "python -m venv .venv --prompt webui-forge",
-            ".venv\\Scripts\\activate"
+            "source /workspace/.venv/bin/activate",
+            "mkdir /workspace/webui-forge",
+            "cd /workspace/webui-forge",
+            "uv venv --prompt webui-forge -p 3.10",
+            "source /workspace/{aitool_name.value}/.venv/bin/activate",
         ]
 
         results = []
@@ -291,7 +294,8 @@ def _(log_error, log_info, mo, subprocess, uv_venv_setup):
             try:
                 log_info(f"执行命令: {cmd}")
                 result = subprocess.run(
-                    ["powershell", "-Command", cmd],
+                    cmd,
+                    shell=True,
                     check=True,
                     text=True,
                     stdout=subprocess.PIPE,

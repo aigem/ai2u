@@ -107,10 +107,13 @@ check_config() {
     log "检查配置文件..."
     if [ ! -f $WORK_DIR/apps/frpc.ini ]; then
         echo "==================================="
-        log "错误: frpc.ini 不存在，请获取后重试，并放在 $WORK_DIR/apps/ 目录下"
+        log "方法一错误: frpc.ini 不存在，请获取后重试，并放在 $WORK_DIR/apps/ 目录下"
         log "获取方式: 加群 https://qr61.cn/oohivs/qRp62U6"
         echo "==================================="
-        exit 1
+        log "方法二：使用ksa访问内网服务"
+        log "使用方式: 加群 https://qr61.cn/oohivs/qRp62U6"
+        log "或查看视频教程："
+        echo "==================================="
     fi
 }
 
