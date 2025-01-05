@@ -20,7 +20,6 @@ def _(mo):
     aitool_name = mo.ui.dropdown(
         ["comfyUI", "openWebUI", "StableDifusion"], value="StableDifusion"
     )
-
     return (aitool_name,)
 
 
@@ -82,7 +81,7 @@ def _(mo):
 
 
 @app.cell
-def _(log_info, mo, os, subprocess, sys):
+def _(aitool_name, log_info, mo, os, subprocess, sys):
     def show_info():
         info = []
 
@@ -147,6 +146,9 @@ def _(log_info, mo, os, subprocess, sys):
             info.append("✗ fastapi 未安装")
             log_info("fastapi未安装")
 
+        info.append(f"\n 安装的Ai应用为:【 {aitool_name.value} 】")
+        log_info(f"安装的Ai应用为: {aitool_name.value}")
+
         return mo.md("\n".join(info))
     return (show_info,)
 
@@ -194,15 +196,15 @@ def _(log_error, log_info, mo, subprocess):
 
 @app.cell
 def _(mo):
-    install_system = mo.ui.switch(label="启用系统依赖安装", value=False)
-    install_system
-    return (install_system,)
+    install_switch_system = mo.ui.switch(label="启用系统依赖安装", value=False)
+    install_switch_system
+    return (install_switch_system,)
 
 
 @app.cell
-def _(install_system, log_error, log_info, mo, subprocess):
+def _(install_switch_system, log_error, log_info, mo, subprocess):
     def install_system_dependencies():
-        if not install_system.value:
+        if not install_switch_system.value:
             return mo.md("⚠️ 请先启用系统依赖安装开关").callout(kind="warn")
 
         dependencies = [
@@ -241,7 +243,7 @@ def _(install_system, log_error, log_info, mo, subprocess):
                 log_error(error_msg)
 
         # 生成安装报告
-        status = "success" if success_count == len(dependencies) else "danger"
+        status = "success" if success_count == len(dependencies) else "error"
         report = [
             f"### 系统依赖安装报告",
             f"总计: {len(dependencies)} 行命令",
@@ -252,7 +254,7 @@ def _(install_system, log_error, log_info, mo, subprocess):
             *results,
         ]
 
-        return mo.md("\n".join(report)).callout(kind=status)
+        return mo.md("\n\n".join(report)).callout(kind=status)
 
 
     # 安装依赖
@@ -274,17 +276,18 @@ def _(mo):
 
 
 @app.cell
-def _(log_error, log_info, mo, subprocess, uv_venv_setup):
-    def install_venv():
+def _(install_app, log_error, log_info, mo, subprocess, uv_venv_setup, os):
+    def setup_venv():
         if not uv_venv_setup.value:
-            return mo.md("⚠️ 请先启用虚拟环境设置开关").callout(kind="warn")
-
+            return mo.md("⚠️ 请先启用拟环境设置开关").callout(kind="warn")
+        
         dependencies = [
-            "source /workspace/.venv/bin/activate",
-            "mkdir /workspace/webui-forge",
-            "cd /workspace/webui-forge",
-            "uv venv --prompt webui-forge -p 3.10",
-            "source /workspace/{aitool_name.value}/.venv/bin/activate",
+            f"mkdir -p {aitool_name.value}",  # 创建目录
+            f"cd {aitool_name.value}",        # 进入目录
+            "uv venv -p 3.10",                # 创建虚拟环境
+            "source .venv/bin/activate",       # 激活虚拟环境
+            "uv pip install -U pip setuptools wheel",  # 更新基础包
+            "uv pip install -U marimo",       # 安装 marimo
         ]
 
         results = []
@@ -310,7 +313,7 @@ def _(log_error, log_info, mo, subprocess, uv_venv_setup):
                 log_error(error_msg)
 
         # 生成安装报告
-        status = "success" if success_count == len(dependencies) else "danger"
+        status = "success" if success_count == len(dependencies) else "error"
         report = [
             f"### 系统依赖安装报告",
             f"总计: {len(dependencies)} 个依赖",
@@ -325,25 +328,34 @@ def _(log_error, log_info, mo, subprocess, uv_venv_setup):
 
 
     # 安装依赖
-    install_venv()
-    return (install_venv,)
+    install_app()
+    return (setup_venv,)
 
 
 @app.cell
 def _(mo):
-    install_app = mo.ui.switch(label="启用程序安装", value=False)
-    install_app
-    return (install_app,)
+    install_switch_app = mo.ui.switch(label="启用程序安装", value=False)
+    install_switch_app
+    return (install_switch_app,)
 
 
 @app.cell
-def _(install_app, log_error, log_info, mo, subprocess):
-    def install_step():
-        if not install_app.value:
+def _(install_switch_app, log_error, log_info, mo, subprocess):
+    def install_app():
+        if not install_switch_app.value:
             return mo.md("⚠️ 请先启用程序安装开关").callout(kind="warn")
 
         dependencies = [
-            "pip install torch torchvision torchaudio -i http://mirrors.cloud.tencent.com/pypi/simple",
+            "apt-get install sudo -y",
+            "echo 'Set disable_coredump false' >> /etc/sudo.conf",
+            "apt-get update",
+            "apt install build-essential -y",
+            "apt install libgl1 -y",
+            "apt-get install libtcmalloc-minimal4 -y",
+            "apt install ffmpeg -y",
+            "apt-get install bc -y",
+            "apt update",
+            "apt upgrade -y",
         ]
 
         results = []
@@ -369,7 +381,7 @@ def _(install_app, log_error, log_info, mo, subprocess):
                 log_error(error_msg)
 
         # 生成安装报告
-        status = "success" if success_count == len(dependencies) else "danger"
+        status = "success" if success_count == len(dependencies) else "error"
         report = [
             f"### 系统依赖安装报告",
             f"总计: {len(dependencies)} 个依赖",
@@ -384,8 +396,8 @@ def _(install_app, log_error, log_info, mo, subprocess):
 
 
     # 安装依赖
-    install_step()
-    return (install_step,)
+    install_app()
+    return (install_app,)
 
 
 @app.cell
