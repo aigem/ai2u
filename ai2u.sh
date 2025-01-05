@@ -107,6 +107,7 @@ setup_project() {
     if [ -d "ai2u" ]; then
         log "更新已存在的项目目录..."
         cd ai2u
+        git config --global --unset url."https://gh-proxy.com/".insteadOf
         git pull
     else
         log "克隆项目..."
