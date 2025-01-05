@@ -141,9 +141,21 @@ start_services() {
 
     log "正在启动 KSA..."
     chmod +x $WORK_DIR/apps/ksa/ksa_x64
+    rm -rf $WORK_DIR/ksa_ID_Token.txt
     $WORK_DIR/apps/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1 &
-    log "KSA 已运行完成，ID和Token已保存到 $WORK_DIR/ksa_ID_Token.txt"
-    log "详细使用请进群获取: https://qr61.cn/oohivs/qRp62U6"
+    log "检查 KSA 是否启动成功..."
+    sleep 6
+    if [ -f $WORK_DIR/ksa_ID_Token.txt ]; then
+        echo "==================================="
+        echo "KSA 已运行完成，ID和Token已保存到 $WORK_DIR/ksa_ID_Token.txt"
+        echo "详细使用请进群获取: https://qr61.cn/oohivs/qRp62U6"
+        echo "==================================="
+        echo ""
+    else
+        log "错误: KSA 启动失败，请检查日志"
+        log "请自行部署内网穿透工具来访问服务"
+        log "跳过启动KSA"
+    fi
     
     # 启动 frp
     log "检查配置文件,存在才启动frp"
@@ -175,8 +187,16 @@ start_services() {
     log "启动-AI应用-安装程序"
     cd $WORK_DIR
     # 启动的文件名称，使用APP_NAME变量
-    log "启动应用：$APP_NAME (模式: $RUN_MODE)"
-    marimo $RUN_MODE "apps/${APP_NAME}.py" -p 7860 --no-token
+    if [ "$RUN_MODE" = "run" ]; then
+        log "启动应用：$APP_NAME"
+        log "启动端口：7860"
+        log "如果不会内网穿透，请使用终端模式：退出安装程序运行以下命令"
+        log "python 'apps/${APP_NAME}.py'"
+        marimo run "apps/${APP_NAME}.py" -p 7860 --no-token
+    else
+        log "启动应用：$APP_NAME (模式: 编辑模式)"
+        marimo edit "apps/${APP_NAME}.py" -p 7860 --no-token
+    fi
 }
 
 # 主函数
