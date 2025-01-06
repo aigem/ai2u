@@ -1,3 +1,5 @@
-
 .codegpt
-/apps
+apps/
+sd.py
+apps/sd.py
+gf-apps/
