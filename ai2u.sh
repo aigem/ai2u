@@ -137,20 +137,23 @@ start_services() {
 
     log "正在启动 KSA..."
     chmod +x $WORK_DIR/apps/ksa/ksa_x64
-    rm -rf $WORK_DIR/ksa_ID_Token.txt
-    $WORK_DIR/apps/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1 &
-    log "检查 KSA 是否启动成功..."
-    sleep 6
-    if [ -f $WORK_DIR/ksa_ID_Token.txt ]; then
+    rm -f $WORK_DIR/ksa_ID_Token.txt  # 先删除可能存在的旧文件
+    
+    # 前台运行 KSA 并等待完成
+    $WORK_DIR/apps/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1
+    
+    # 检查文件是否生成并有内容
+    if [ -s "$WORK_DIR/ksa_ID_Token.txt" ]; then
+        log "KSA 已运行完成，ID和Token已保存到 $WORK_DIR/ksa_ID_Token.txt"
         echo "==================================="
         echo "KSA 已运行完成，ID和Token已保存到 $WORK_DIR/ksa_ID_Token.txt"
         echo "详细使用请进群获取: https://qr61.cn/oohivs/qRp62U6"
         echo "==================================="
         echo ""
     else
-        log "错误: KSA 启动失败，请检查日志"
-        log "请自行部署内网穿透工具来访问服务"
-        log "跳过启动KSA"
+        log "错误: KSA 运行失败或未生成有效的 ID 和 Token，再次运行"
+        $WORK_DIR/apps/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1
+        sleep 3
     fi
     
     # 启动 frp
