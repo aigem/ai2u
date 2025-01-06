@@ -135,12 +135,27 @@ setup_project() {
 start_services() {
     log "启动服务..."
 
+    # 临时禁用错误退出
+    set +e
+
     log "正在启动 KSA..."
-    chmod +x $WORK_DIR/apps/ksa/ksa_x64
-    rm -f $WORK_DIR/ksa_ID_Token.txt  # 先删除可能存在的旧文件
+    if [ ! -x "$WORK_DIR/apps/ksa/ksa_x64" ]; then
+        log "错误: KSA 可执行文件不存在或没有执行权限"
+        chmod +x "$WORK_DIR/apps/ksa/ksa_x64" 2>/dev/null || {
+            log "错误: 无法设置执行权限"
+            return 1
+        }
+    fi
+
+    rm -f "$WORK_DIR/ksa_ID_Token.txt"  # 先删除可能存在的旧文件
     
-    # 前台运行 KSA 并等待完成
-    $WORK_DIR/apps/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1
+    # 运行 KSA 并捕获返回值
+    "$WORK_DIR/apps/ksa/ksa_x64" > "$WORK_DIR/ksa_ID_Token.txt" 2>&1
+    KSA_STATUS=$?
+    
+    if [ $KSA_STATUS -ne 0 ]; then
+        log "警告: KSA 返回状态码 $KSA_STATUS"
+    fi
     
     # 检查文件是否生成并有内容
     if [ -s "$WORK_DIR/ksa_ID_Token.txt" ]; then
@@ -151,18 +166,24 @@ start_services() {
         echo "==================================="
         echo ""
     else
-        log "错误: KSA 运行失败或未生成有效的 ID 和 Token，再次运行"
-        $WORK_DIR/apps/ksa/ksa_x64 > $WORK_DIR/ksa_ID_Token.txt 2>&1
-        sleep 3
+        log "警告: KSA 未生成有效的 ID 和 Token，尝试再次运行"
+        "$WORK_DIR/apps/ksa/ksa_x64" > "$WORK_DIR/ksa_ID_Token.txt" 2>&1
+        if [ ! -s "$WORK_DIR/ksa_ID_Token.txt" ]; then
+            log "错误: KSA 再次运行失败"
+            log "请自行部署内网穿透工具来访问服务"
+        fi
     fi
+
+    # 重新启用错误退出
+    set -e
     
     # 启动 frp
     log "检查配置文件,存在才启动frp"
-    if [ -f $WORK_DIR/apps/frpc.ini ]; then
+    if [ -f "$WORK_DIR/apps/frpc.ini" ]; then
         log "配置文件存在，正在启动 FRP..."
-        chmod +x $WORK_DIR/apps/frpc
-        cd $WORK_DIR/apps
-        ./frpc > $WORK_DIR/logs/frp.log 2>&1 &
+        chmod +x "$WORK_DIR/apps/frpc"
+        cd "$WORK_DIR/apps"
+        ./frpc > "$WORK_DIR/logs/frp.log" 2>&1 &
         FRP_PID=$!
         echo $FRP_PID > frp.pid
         log "FRP 服务已启动 (PID: $FRP_PID)"
