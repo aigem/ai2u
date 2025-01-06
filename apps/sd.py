@@ -17,146 +17,154 @@ def _():
 
 @app.cell
 def _(mo):
+    """UI 组件：工具选择"""
     aitool_name = mo.ui.dropdown(
-        ["comfyUI", "openWebUI", "StableDifusion"], value="StableDifusion"
+        ["comfyUI", "openWebUI", "StableDifusion"], 
+        value="StableDifusion",
+        label="选择AI工具"
     )
     return (aitool_name,)
 
 
 @app.cell
-def _(aitool_name, datetime, logging, os):
-    def setup_logger():
-        # 创建logs目录（如果不存在）
-        if not os.path.exists("logs"):
-            os.makedirs("logs")
+def _(datetime, logging, os):
+    """日志处理类"""
+    class Logger:
+        def __init__(self, name):
+            self.logger = self._setup_logger(name)
 
-        # 设置日志文件名（使用当前日期）
-        log_file = (
-            f'logs/{aitool_name.value}_{datetime.now().strftime("%Y%m%d")}.log'
-        )
+        def _setup_logger(self, name):
+            os.makedirs("logs", exist_ok=True)
+            log_file = f'logs/{name}_{datetime.now().strftime("%Y%m%d")}.log'
 
-        # 配置日志记录器
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(asctime)s - %(levelname)s - %(message)s",
-            handlers=[
-                logging.FileHandler(log_file, encoding="utf-8"),
-                logging.StreamHandler(),
-            ],
-        )
+            logger = logging.getLogger(name)
+            logging.basicConfig(
+                level=logging.INFO,
+                format="%(asctime)s - %(levelname)s - %(message)s",
+                handlers=[
+                    logging.FileHandler(log_file, encoding="utf-8"),
+                    logging.StreamHandler(),
+                ],
+            )
+            return logger
 
-        logger = logging.getLogger("{aitool_name.value}")
-        return logger
-
-
-    # 初始化日志记录器
-    logger = setup_logger()
-
-
-    def log_info(message):
-        """记录信息级别的日志"""
-        logger.info(message)
-
-
-    def log_error(message):
-        """记录错误级别的日志"""
-        logger.error(message)
-
-
-    def log_warning(message):
-        """记录警告级别的日志"""
-        logger.warning(message)
-    return log_error, log_info, log_warning, logger, setup_logger
+        def info(self, msg): self.logger.info(msg)
+        def error(self, msg): self.logger.error(msg)
+        def warning(self, msg): self.logger.warning(msg)
+    return (Logger,)
 
 
 @app.cell
 def _(mo):
-    def main_title():
-        return mo.md(
-            """
-            # Ai for U
-            """
-        ).callout()
-    return (main_title,)
+    """UI 组件：功能开关"""
+    switches = {
+        "system": mo.ui.switch(label="系统依赖安装", value=False),
+        "venv": mo.ui.switch(label="虚拟环境设置", value=False),
+        "repo": mo.ui.switch(label="程序文件设置", value=False),
+        "app": mo.ui.switch(label="启动应用程序", value=False),
+        "download": mo.ui.switch(label="文件或模型下载", value=False),
+    }
+    return (switches,)
 
 
 @app.cell
-def _(aitool_name, log_info, mo, os, subprocess, sys):
-    def show_info():
-        info = []
-
-        # 当前路径信息
-        current_path = os.getcwd()
-        info.append(f"当前路径: {current_path}")
-        log_info(f"系统路径: {current_path}")
-
-        # Python 版本
-        python_version = sys.version.split()[0]
-        info.append(f"\n Python 版本: {python_version}")
-        log_info(f"Python版本: {python_version}")
-
-        # Node.js 版本
-        try:
-            node_version = subprocess.check_output(
-                ["node", "--version"], text=True
-            ).strip()
-            info.append(f"\n Node.js版本: {node_version}")
-            log_info(f"Node.js版本: {node_version}")
-        except:
-            info.append(f"\n Node.js 未安装")
-            log_info("Node.js未安装")
-
-        # uv 版本
-        try:
-            uv_version = subprocess.check_output(
-                ["uv", "--version"], text=True
-            ).strip()
-            info.append(f"\n uv版本: {uv_version}")
-            log_info(f"uv版本: {uv_version}")
-        except:
-            info.append(f"\n uv 未安装")
-            log_info("uv未安装")
-
-        # 虚拟环境信息
-        if "VIRTUAL_ENV" in os.environ:
-            venv_path = os.environ["VIRTUAL_ENV"]
-            info.append(f"\n 已激活，虚拟环境路径: {venv_path}")
-            log_info(f"虚拟环境路径: {venv_path}")
-        else:
-            info.append("\n 未在虚拟环境中运行")
-            log_info("未在虚拟环境中运行")
-
-        # 检查指定软件安装情况
-        info.append(f"\n#### 已安装的包")
-        try:
-            import marimo
-
-            info.append(f"✓ marimo {marimo.__version__}")
-            log_info(f"marimo版本: {marimo.__version__}")
-        except:
-            info.append("✗ marimo 未安装")
-            log_info("marimo未安装")
-
-        try:
-            import fastapi
-
-            info.append(f"✓ fastapi {fastapi.__version__}")
-            log_info(f"fastapi版本: {fastapi.__version__}")
-        except:
-            info.append("✗ fastapi 未安装")
-            log_info("fastapi未安装")
-
-        info.append(f"\n 安装的Ai应用为:【 {aitool_name.value} 】")
-        log_info(f"安装的Ai应用为: {aitool_name.value}")
-
-        return mo.md("\n".join(info))
-    return (show_info,)
+def _(Logger, aitool_name):
+    """初始化日志记录器"""
+    logger = Logger(aitool_name.value)
+    return (logger,)
 
 
 @app.cell
-def _(main_title):
-    main_title()
-    return
+def _(subprocess):
+    """命令执行工具类"""
+    class CommandRunner:
+        @staticmethod
+        def run(cmd, logger, check=True):
+            try:
+                logger.info(f"执行命令: {cmd}")
+                result = subprocess.run(
+                    cmd,
+                    shell=True,
+                    check=check,
+                    text=True,
+                )
+                logger.info("命令执行成功")
+                return True, None
+            except subprocess.CalledProcessError as e:
+                error_msg = f"命令执行失败: {e.stderr}"
+                logger.error(error_msg)
+                return False, error_msg
+    return (CommandRunner,)
+
+
+@app.cell
+def _(aitool_name):
+    """虚拟环境所在文件夹、git REPO"""
+    uv_venv_dir = f"ai_{aitool_name.value}"
+    git_repo_url = "https://github.com/love9678/stable-diffusion-webui-forge.git"
+    repo_name = "stable-diffusion-webui-forge"
+    app_log = f"{aitool_name.value}.log"
+    return app_log, git_repo_url, repo_name, uv_venv_dir
+
+
+@app.cell
+def _():
+    """配置类"""
+    class Config:
+        SYSTEM_DEPS = [
+            "apt-get install sudo -y",
+            "echo \"Set disable_coredump false\" >> /etc/sudo.conf",
+            "apt-get update",
+            "apt install build-essential libgl1 libtcmalloc-minimal4 ffmpeg bc -y",
+        ]
+
+        @staticmethod
+        def get_venv_commands(venv_dir):
+            return [
+                f"cd {venv_dir} && uv venv -p 3.10 && . .venv/bin/activate",
+                f"cd {venv_dir} && . .venv/bin/activate && uv pip install -U pip setuptools wheel",
+                f"cd {venv_dir} && . .venv/bin/activate && uv pip install -U  torch==2.3.1 torchvision torchaudio aria2 -i http://mirrors.cloud.tencent.com/pypi/simple"
+            ]
+
+        @staticmethod
+        def setup_repo_commands(venv_dir, git_url, repo_name):
+            return [
+                # 先检查并删除已存在的目录
+                f"cd {venv_dir} && rm -rf {repo_name}",
+                # 然后克隆仓库
+                f"cd {venv_dir} && git clone {git_url} {repo_name}",
+            ]
+
+        @staticmethod
+        def get_start_command(venv_dir, repo_name, app_log):
+            """获取启动命令"""
+            return {
+                'cmd': f"cd {venv_dir} && . .venv/bin/activate && cd {repo_name} && export HF_ENDPOINT=https://hf-mirror.com && nohup ./webui.sh -f > {app_log} 2>&1 &",
+                'check_cmd': "pgrep -f 'python.*launch.py'"
+            }
+
+        @staticmethod
+        def get_stop_commands():
+            """获取停止命令"""
+            return {
+                'commands': [
+                    # 查找并终止 python 进程
+                    "pkill -f 'python.*launch.py'",
+                    # 查找并终止 webui.sh 进程
+                    "pkill -f 'webui.sh'",
+                    # 使用 kill 命令终止（如果找到了PID）
+                    "for pid in $(pgrep -f 'python.*launch.py'); do kill -9 $pid 2>/dev/null; done",
+                ],
+                'check_cmd': "pgrep -f 'python.*launch.py'"
+            }
+
+        @staticmethod
+        def download_commands(venv_dir, repo_name):
+            return [
+                f"mkdir {venv_dir}/{repo_name}/models/Stable-diffusion/flux",
+                f"cd {venv_dir}/{repo_name}/models/Stable-diffusion/flux && aria2c -c -x 16 -s 16 -k 50M https://hf-mirror.com/lllyasviel/flux1-dev-bnb-nf4/resolve/main/flux1-dev-bnb-nf4-v2.safetensors -o flux1-dev-bnb-nf4-v2.safetensors",
+            ]
+    return (Config,)
 
 
 @app.cell
@@ -166,248 +174,193 @@ def _(aitool_name):
 
 
 @app.cell
-def _(show_info):
-    # 调用 show_info 来显示基本信息
-    show_info()
+def _(switches):
+    switches
     return
 
 
 @app.cell
-def _(log_error, log_info, mo, subprocess):
-    def configure_git_proxy():
-        try:
-            # 配置 Git 代理
-            cmd = 'git config --global url."https://gh-proxy.com/".insteadOf https://'
-            subprocess.run(cmd, shell=True, check=True)
-            log_info("Git代理配置成功")
-            return mo.md("✅ Git代理配置成功：已设置为使用 gh-proxy").callout(
-                kind="success"
-            )
-        except subprocess.CalledProcessError as e:
-            error_msg = f"Git代理配置失败: {str(e)}"
-            log_error(error_msg)
-            return mo.md(f"❌ {error_msg}").callout(kind="error")
+def _(CommandRunner, Config, logger, mo, switches):
+    """系统依赖安装"""
+    def install_system():
+        if not switches["system"].value:
+            return mo.md("⚠️ 请先启用系统依赖安装").callout(kind="warn")
 
+        for cmd in Config.SYSTEM_DEPS:
+            success, error = CommandRunner.run(cmd, logger)
+            if not success:
+                return mo.md(f"❌ {error}").callout(kind="danger")
 
-    # 执行配置
-    configure_git_proxy()
-    return (configure_git_proxy,)
+        return mo.md("✅ 系统依赖安装完成").callout(kind="success")
+
+    install_system()
+    return (install_system,)
 
 
 @app.cell
-def _(mo):
-    install_switch_system = mo.ui.switch(label="启用系统依赖安装", value=False)
-    install_switch_system
-    return (install_switch_system,)
-
-
-@app.cell
-def _(install_switch_system, log_error, log_info, mo, subprocess):
-    def install_system_dependencies():
-        if not install_switch_system.value:
-            return mo.md("⚠️ 请先启用系统依赖安装开关").callout(kind="warn")
-
-        dependencies = [
-            "apt-get install sudo -y",
-            "echo 'Set disable_coredump false' >> /etc/sudo.conf",
-            "apt-get update",
-            "apt install build-essential -y",
-            "apt install libgl1 -y",
-            "apt-get install libtcmalloc-minimal4 -y",
-            "apt install ffmpeg -y",
-            "apt-get install bc -y",
-            "apt update",
-            "apt upgrade -y",
-        ]
-
-        results = []
-        success_count = 0
-
-        for cmd in dependencies:
-            try:
-                log_info(f"执行命令: {cmd}")
-                result = subprocess.run(
-                    cmd,
-                    shell=True,
-                    check=True,
-                    text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                success_count += 1
-                results.append(f"✅ {cmd}")
-                log_info(f"命令执行成功: {cmd}")
-            except subprocess.CalledProcessError as e:
-                error_msg = f"命令执行失败: {cmd}\n错误信息: {e.stderr}"
-                results.append(f"❌ {cmd}")
-                log_error(error_msg)
-
-        # 生成安装报告
-        status = "success" if success_count == len(dependencies) else "error"
-        report = [
-            f"### 系统依赖安装报告",
-            f"总计: {len(dependencies)} 行命令",
-            f"成功: {success_count} 个",
-            f"失败: {len(dependencies) - success_count} 个",
-            "",
-            "### 详细信息:",
-            *results,
-        ]
-
-        return mo.md("\n\n".join(report)).callout(kind=status)
-
-
-    # 安装依赖
-    install_system_dependencies()
-    return (install_system_dependencies,)
-
-
-@app.cell
-def _():
-    # 只有上面的cell成功完成，再运行后面的cell
-    return
-
-
-@app.cell
-def _(mo):
-    uv_venv_setup = mo.ui.switch(label="虚拟环境的设置及启动", value=False)
-    uv_venv_setup
-    return (uv_venv_setup,)
-
-
-@app.cell
-def _(install_app, log_error, log_info, mo, subprocess, uv_venv_setup, os):
+def _(CommandRunner, Config, logger, mo, os, switches, uv_venv_dir):
+    """虚拟环境设置"""
     def setup_venv():
-        if not uv_venv_setup.value:
-            return mo.md("⚠️ 请先启用拟环境设置开关").callout(kind="warn")
-        
-        dependencies = [
-            f"mkdir -p {aitool_name.value}",  # 创建目录
-            f"cd {aitool_name.value}",        # 进入目录
-            "uv venv -p 3.10",                # 创建虚拟环境
-            "source .venv/bin/activate",       # 激活虚拟环境
-            "uv pip install -U pip setuptools wheel",  # 更新基础包
-            "uv pip install -U marimo",       # 安装 marimo
-        ]
+        if not switches["venv"].value:
+            return mo.md("⚠️ 请先启用虚拟环境设置").callout(kind="warn")
 
-        results = []
-        success_count = 0
+        os.makedirs(uv_venv_dir, exist_ok=True)
 
-        for cmd in dependencies:
-            try:
-                log_info(f"执行命令: {cmd}")
-                result = subprocess.run(
-                    cmd,
-                    shell=True,
-                    check=True,
-                    text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                success_count += 1
-                results.append(f"✅ {cmd}")
-                log_info(f"命令执行成功: {cmd}")
-            except subprocess.CalledProcessError as e:
-                error_msg = f"命令执行失败: {cmd}\n错误信息: {e.stderr}"
-                results.append(f"❌ {cmd}")
-                log_error(error_msg)
+        for cmd in Config.get_venv_commands(uv_venv_dir):
+            success, error = CommandRunner.run(cmd, logger)
+            if not success:
+                return mo.md(f"❌ {error}").callout(kind="danger")
 
-        # 生成安装报告
-        status = "success" if success_count == len(dependencies) else "error"
-        report = [
-            f"### 系统依赖安装报告",
-            f"总计: {len(dependencies)} 个依赖",
-            f"成功: {success_count} 个",
-            f"失败: {len(dependencies) - success_count} 个",
-            "",
-            "### 详细信息:",
-            *results,
-        ]
+        return mo.md("✅ 虚拟环境设置完成").callout(kind="success")
 
-        return mo.md("\n".join(report)).callout(kind=status)
-
-
-    # 安装依赖
-    install_app()
+    setup_venv()
     return (setup_venv,)
 
 
 @app.cell
-def _(mo):
-    install_switch_app = mo.ui.switch(label="启用程序安装", value=False)
-    install_switch_app
-    return (install_switch_app,)
+def _(
+    CommandRunner,
+    Config,
+    git_repo_url,
+    logger,
+    mo,
+    repo_name,
+    switches,
+    uv_venv_dir,
+):
+    """程序文件安装设置"""
+    def setup_repo():
+        if not switches["repo"].value:
+            return mo.md("⚠️ 请先启用文件安装设置").callout(kind="warn")
+
+        for cmd in Config.setup_repo_commands(uv_venv_dir,git_repo_url,repo_name):
+            success, error = CommandRunner.run(cmd, logger)
+            if not success:
+                return mo.md(f"❌ {error}").callout(kind="danger")
+
+        return mo.md("✅ 程序文件设置完成").callout(kind="success")
+
+    setup_repo()
+    return (setup_repo,)
 
 
 @app.cell
-def _(install_switch_app, log_error, log_info, mo, subprocess):
-    def install_app():
-        if not install_switch_app.value:
-            return mo.md("⚠️ 请先启用程序安装开关").callout(kind="warn")
+def _(mo):
+    """创建启动和停止按钮"""
+    btn = mo.ui.run_button(label="启动服务", kind="info")
+    btn1 = mo.ui.run_button(label="停止服务", kind="info")
+    return btn, btn1
 
-        dependencies = [
-            "apt-get install sudo -y",
-            "echo 'Set disable_coredump false' >> /etc/sudo.conf",
-            "apt-get update",
-            "apt install build-essential -y",
-            "apt install libgl1 -y",
-            "apt-get install libtcmalloc-minimal4 -y",
-            "apt install ffmpeg -y",
-            "apt-get install bc -y",
-            "apt update",
-            "apt upgrade -y",
-        ]
 
-        results = []
-        success_count = 0
+@app.cell
+def _(btn):
+    btn
+    return
 
-        for cmd in dependencies:
+
+@app.cell
+def _(btn1):
+    btn1
+    return
+
+
+@app.cell
+def _(
+    Config,
+    app_log,
+    btn,
+    btn1,
+    logger,
+    repo_name,
+    subprocess,
+    switches,
+    uv_venv_dir,
+):
+    """启动/停止应用程序"""
+    def handle_app():
+        if not switches["app"].value:
+            print("⚠️ 请先启用应用程序开关")
+            return
+
+        if btn.value:
+            # 获取启动配置
+            start_config = Config.get_start_command(uv_venv_dir, repo_name, app_log)
+            logger.info(f"启动应用程序...")
             try:
-                log_info(f"执行命令: {cmd}")
+                # 执行启动命令
+                subprocess.run(start_config['cmd'], shell=True, check=True)
+                print("✅ 应用程序已在后台启动")
+                print(f"查看日志: tail -f {app_log}")
+
+                # 等待几秒确保程序启动
+                import time
+                time.sleep(3)
+
+                # 检查进程是否在运行
                 result = subprocess.run(
-                    cmd,
-                    shell=True,
-                    check=True,
-                    text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    start_config['check_cmd'], 
+                    shell=True, 
+                    text=True, 
+                    capture_output=True
                 )
-                success_count += 1
-                results.append(f"✅ {cmd}")
-                log_info(f"命令执行成功: {cmd}")
+                if result.returncode == 0:
+                    print(f"进程ID: {result.stdout.strip()}")
+                else:
+                    print("⚠️ 进程可能未正常启动，请检查日志")
+
             except subprocess.CalledProcessError as e:
-                error_msg = f"命令执行失败: {cmd}\n错误信息: {e.stderr}"
-                results.append(f"❌ {cmd}")
-                log_error(error_msg)
+                print(f"❌ 启动失败: {e.stderr if e.stderr else str(e)}")
+                logger.error(f"启动失败: {e.stderr if e.stderr else str(e)}")
 
-        # 生成安装报告
-        status = "success" if success_count == len(dependencies) else "error"
-        report = [
-            f"### 系统依赖安装报告",
-            f"总计: {len(dependencies)} 个依赖",
-            f"成功: {success_count} 个",
-            f"失败: {len(dependencies) - success_count} 个",
-            "",
-            "### 详细信息:",
-            *results,
-        ]
+        elif btn1.value:
+            try:
+                logger.info("停止应用程序...")
+                # 获取停止配置
+                stop_config = Config.get_stop_commands()
 
-        return mo.md("\n".join(report)).callout(kind=status)
+                # 执行停止命令
+                for cmd in stop_config['commands']:
+                    subprocess.run(cmd, shell=True, check=False)
 
+                # 验证进程是否已停止
+                result = subprocess.run(
+                    stop_config['check_cmd'], 
+                    shell=True, 
+                    capture_output=True
+                )
+                if result.returncode != 0:
+                    print("✅ 应用程序已停止")
+                    logger.info("应用程序已停止")
+                else:
+                    print("⚠️ 进程可能未完全停止，请手动检查")
+                    logger.warning("进程可能未完全停止")
 
-    # 安装依赖
-    install_app()
-    return (install_app,)
+            except Exception as e:
+                print(f"❌ 停止失败: {str(e)}")
+                logger.error(f"停止失败: {str(e)}")
+
+    handle_app()
+    return (handle_app,)
 
 
 @app.cell
-def _(mo):
-    def all_done():
-        return mo.md(f"✅ 安装完成").callout(kind="success")
+def _(CommandRunner, Config, logger, mo, repo_name, switches, uv_venv_dir):
+    """下载：文件或模型"""
+    def download_files():
+        if not switches["download"].value:
+            return mo.md("⚠️ 请先启用下载开关").callout(kind="warn")
 
+        # 获取下载命令列表
+        commands = Config.download_commands(uv_venv_dir, repo_name)
+        for cmd in commands:
+            success, error = CommandRunner.run(cmd, logger)
+            if not success:
+                return mo.md(f"❌ {error}").callout(kind="danger")
 
-    all_done()
-    return (all_done,)
+        return mo.md("✅ 相关下载已经完成").callout(kind="success")
+
+    download_files()
+    return (download_files,)
 
 
 if __name__ == "__main__":

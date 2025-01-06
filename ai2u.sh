@@ -103,19 +103,14 @@ install_dependencies() {
 setup_project() {
     log "设置项目文件..."
     
-    # 如果目录已存在，先删除
+    # 如果目录已存在，先删除，再clone https://gitee.com/fuliai/ai2u.git
     if [ -d "ai2u" ]; then
-        log "更新已存在的项目目录..."
-        cd ai2u
-        git config --global --unset url."https://gh-proxy.com/".insteadOf
-        git pull
-    else
-        log "克隆项目..."
-        git config --global --unset url."https://gh-proxy.com/".insteadOf
-        # git clone https://github.com/aigem/ai2u.git
-        git clone https://gitee.com/fuliai/ai2u.git
-        cd ai2u
+        log "删除已存在的项目目录..."
+        rm -rf ai2u
     fi
+    log "克隆项目..."
+    git clone https://gitee.com/fuliai/ai2u.git
+    cd ai2u
     
     # 解压 frp.zip
     if [ -f frp.zip ]; then
