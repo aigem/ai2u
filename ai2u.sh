@@ -215,6 +215,15 @@ start_services() {
         marimo run "apps/${APP_NAME}.py" -p 7860 --no-token
     else
         log "启动应用：$APP_NAME (模式: 编辑模式)"
+        echo ""
+        echo "==================================="
+        echo "请使用以下方式打开安装界面:"
+        echo ""
+        echo "ksa或frp，视频教程: https://qr61.cn/oohivs/qRp62U6"
+        echo ""
+        echo "安装日志位置: $WORK_DIR/logs/"
+        echo "==================================="
+        echo ""
         marimo edit "apps/${APP_NAME}.py" -p 7860 --no-token
     fi
 }
