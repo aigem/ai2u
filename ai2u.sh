@@ -14,6 +14,7 @@
 #    参数说明：
 #    - 应用名称：必填，须与apps目录下的安装文件名一致
 #    - 运行模式：可选，edit或run，默认为run
+#    - cli模式：可选，cli，默认为非cli模式
 # =====================================================
 
 # 获取最后一个参数作为应用名称
@@ -202,8 +203,10 @@ start_services() {
         log "获取方式: 加群 https://qr61.cn/oohivs/qRp62U6"
         log "跳过启动frp"
     fi
-    
-    # 启动 SD
+}
+
+start_app() {
+    # 通过marimo来启动Ai程序
     log "启动-AI应用-安装程序"
     cd $WORK_DIR
     # 启动的文件名称，使用APP_NAME变量
@@ -212,7 +215,7 @@ start_services() {
         log "启动端口：7860"
         log "如果不会内网穿透，请使用终端模式：退出安装程序运行以下命令"
         log "python 'apps/${APP_NAME}.py'"
-        marimo run "apps/${APP_NAME}.py" -p 7860 --no-token
+        marimo run "apps/${APP_NAME}.py" -p 7890 --no-token
     else
         log "启动应用：$APP_NAME (模式: 编辑模式)"
         echo ""
@@ -240,7 +243,24 @@ main() {
     install_dependencies
     setup_project
     start_services
+    start_app
 }
 
-# 执行主函数
-main
+main_cli() {
+    log "开始安装..."
+    log "工作目录: $WORK_DIR"
+    log "应用名称: $APP_NAME"
+    
+    check_requirements
+    setup_venv
+    install_dependencies
+    setup_project
+    start_services
+}
+
+# 根据命令行参数执行不同的主函数
+if [ "$1" = "cli" ]; then
+    main_cli
+else
+    main
+fi
