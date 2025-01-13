@@ -14,7 +14,7 @@
 #    参数说明：
 #    - 应用名称：必填，须与apps目录下的安装文件名一致
 #    - 运行模式：可选，edit或run，默认为run
-#    - cli模式：可选，cli，默认为非cli模式
+#    - cli模式：可选，cli，默认为非cli模式 ./ai2u.sh cli <应用名称>
 # =====================================================
 
 # 获取最后一个参数作为应用名称
@@ -212,7 +212,7 @@ start_app() {
     # 启动的文件名称，使用APP_NAME变量
     if [ "$RUN_MODE" = "run" ]; then
         log "启动应用：$APP_NAME"
-        log "启动端口：7860"
+        log "启动端口：7890"
         log "如果不会内网穿透，请使用终端模式：退出安装程序运行以下命令"
         log "python 'apps/${APP_NAME}.py'"
         marimo run "apps/${APP_NAME}.py" -p 7890 --no-token
@@ -227,8 +227,22 @@ start_app() {
         echo "安装日志位置: $WORK_DIR/logs/"
         echo "==================================="
         echo ""
-        marimo edit "apps/${APP_NAME}.py" -p 7860 --no-token
+        marimo edit "apps/${APP_NAME}.py" -p 7890 --no-token
     fi
+}
+
+start_app_cli() {
+    # 通过marimo来启动Ai程序
+    log "启动-AI应用-安装程序"
+    cd $WORK_DIR
+    log "启动文件: apps/${APP_NAME}.py"
+    # 检查文件是否存在
+    if [ ! -f "apps/${APP_NAME}.py" ]; then
+        log "错误: 文件不存在"
+        exit 1
+    fi
+    # 启动的文件名称，使用APP_NAME变量
+    python apps/${APP_NAME}.py
 }
 
 # 主函数
@@ -256,6 +270,7 @@ main_cli() {
     install_dependencies
     setup_project
     start_services
+    start_app_cli
 }
 
 # 根据命令行参数执行不同的主函数
