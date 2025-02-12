@@ -77,17 +77,28 @@ check_requirements() {
 
 # 创建虚拟环境
 setup_venv() {
-    log "创建虚拟环境..."
+    log "检查虚拟环境..."
     
-    # 如果已存在虚拟环境，先删除
-    if [ -d ".venv" ]; then
-        log "删除已存在的虚拟环境..."
-        rm -rf .venv
+    # 检查是否存在可用的虚拟环境
+    if [ -d ".venv" ] && [ -f ".venv/bin/activate" ]; then
+        log "发现已存在的虚拟环境，尝试激活..."
+        source .venv/bin/activate
+        
+        # 验证虚拟环境是否可用
+        if python -c "import sys; sys.exit(0 if sys.prefix.endswith('.venv') else 1)" 2>/dev/null; then
+            log "已有虚拟环境可用，跳过创建步骤"
+            return 0
+        else
+            log "已存在的虚拟环境不可用，需要重建..."
+            rm -rf .venv
+        fi
     fi
     
+    log "创建新的虚拟环境..."
     # 尝试安装uv，如果失败则使用venv
-    if pip install uv -i https://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com; then
+    if pip install uv -i https://pypi.tuna.tsinghua.edu.cn/simple; then
         log "使用uv创建虚拟环境..."
+        export UV_PYTHON_BUILD_MIRROR=https://mirrors.tuna.tsinghua.edu.cn/python-build-standalone/
         if ! uv venv -p 3.10; then
             log "uv创建虚拟环境失败，使用python venv..."
             python -m venv .venv
@@ -102,12 +113,19 @@ setup_venv() {
 
 # 安装依赖
 install_dependencies() {
-    log "安装依赖..."
+    log "检查并安装依赖..."
     
     # 添加重试逻辑
     MAX_RETRIES=3
     RETRY_COUNT=0
     
+    # 检查marimo是否已安装且可用
+    if python -c "import marimo" 2>/dev/null; then
+        log "marimo已安装，跳过安装步骤"
+        return 0
+    fi
+    
+    log "开始安装marimo..."
     while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
         if uv pip install -U marimo -i https://pypi.tuna.tsinghua.edu.cn/simple; then
             log "依赖安装成功"
@@ -118,6 +136,15 @@ install_dependencies() {
             sleep 5
         fi
     done
+    
+    log "使用pip作为备选方案..."
+    if pip install -U marimo -i https://pypi.tuna.tsinghua.edu.cn/simple; then
+        log "使用pip安装成功"
+        return 0
+    else
+        log "错误: 依赖安装失败"
+        exit 1
+    fi
 }
 
 # 设置项目文件
