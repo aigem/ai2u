@@ -14,8 +14,8 @@
 #    参数说明：
 #    - 应用名称：必填，须与apps目录下的安装文件名一致
 #    - 运行模式：可选，edit或run，默认为run
-#    - cli模式：可选，cli，默认为非cli模式 ./ai2u.sh cli <应用名称>
-# cd /tmp/code && deactivate && apt-get update && apt-get install -y curl; bash -c "$(curl -fsSL https://gitee.com/fuliai/ai2u/raw/main/ai2u.sh)" - cli comfyui-ics
+#    - cli模式：可选，cli，默认为非cli模式 ./openi.sh cli <应用名称>
+# cd /tmp/code && deactivate && apt-get update && apt-get install -y curl; bash -c "$(curl -fsSL https://gitee.com/fuliai/ai2u/raw/main/openi.sh)" - cli comfyui-ics
 # =====================================================
 
 # 获取最后一个参数作为应用名称
@@ -109,7 +109,7 @@ install_dependencies() {
     RETRY_COUNT=0
     
     while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-        if uv pip install -U marimo -i https://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com; then
+        if uv pip install -U marimo -i https://pypi.tuna.tsinghua.edu.cn/simple; then
             log "依赖安装成功"
             return 0
         else
@@ -118,16 +118,6 @@ install_dependencies() {
             sleep 5
         fi
     done
-    
-    # 如果重试都失败了，尝试使用pip作为备选
-    log "uv安装失败，尝试使用pip安装..."
-    if pip install -U marimo -i https://mirrors.cloud.tencent.com/pypi/simple --trusted-host mirrors.cloud.tencent.com; then
-        log "使用pip安装成功"
-        return 0
-    else
-        log "错误: 依赖安装失败"
-        exit 1
-    fi
 }
 
 # 设置项目文件
